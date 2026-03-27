@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wms.mapper.InventoryMapper">
+
+    <!-- 库存预警列表 -->
+    <select id="selectWarningList" resultType="com.wms.entity.Inventory">
+        SELECT i.*, p.min_stock, p.max_stock
+        FROM wms_inventory i
+        INNER JOIN wms_product p ON i.product_id = p.id
+        WHERE i.quantity &lt;= p.min_stock
+        OR i.expiry_date &lt;= DATE_ADD(NOW(), INTERVAL 30 DAY)
+        ORDER BY i.quantity ASC
+    </select>
+
+    <!-- 库存统计 -->
+    <select id="selectInventoryStats" resultType="java.util.Map">
+        SELECT 
+            w.warehouse_name as warehouseName,
+            COUNT(DISTINCT i.product_id) as productCount,
+            SUM(i.quantity) as totalQuantity,
+            SUM(i.available_qty) as availableQuantity
+        FROM wms_inventory i
+        INNER JOIN wms_warehouse w ON i.warehouse_id = w.id
+        <where>
+            <if test="warehouseId != null">
+                AND i.warehouse_id = #{warehouseId}
+            </if>
+        </where>
+        GROUP BY i.warehouse_id, w.warehouse_name
+    </select>
+
+</mapper>
