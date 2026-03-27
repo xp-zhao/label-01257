@@ -22,7 +22,10 @@
       <template #header>
         <div class="card-header">
           <span class="title">商品列表</span>
-          <el-button type="primary" @click="handleAdd"><el-icon><Plus /></el-icon> 新增商品</el-button>
+          <div>
+            <el-button type="success" @click="handleExport"><el-icon><Download /></el-icon> 导出</el-button>
+            <el-button type="primary" @click="handleAdd"><el-icon><Plus /></el-icon> 新增商品</el-button>
+          </div>
         </div>
       </template>
       <el-table :data="tableData" v-loading="loading" stripe style="width: 100%">
@@ -129,7 +132,7 @@
 <script setup>
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProductList, addProduct, updateProduct, deleteProduct } from '@/api/stock'
+import { getProductList, addProduct, updateProduct, deleteProduct, exportProducts } from '@/api/stock'
 import { withLoading } from '@/utils/loading'
 
 const loading = ref(false)
@@ -187,6 +190,32 @@ const handleSubmit = async () => {
     dialogVisible.value = false; loadData()
   } catch (error) { console.error(error) }
   finally { submitLoading.value = false }
+}
+
+const handleExport = async () => {
+  try {
+    const res = await exportProducts(queryParams)
+    const url = window.URL.createObjectURL(new Blob([res.data]))
+    const link = document.createElement('a')
+    link.href = url
+    const contentDisposition = res.headers['content-disposition']
+    let fileName = '商品信息.xlsx'
+    if (contentDisposition) {
+      const fileNameMatch = contentDisposition.match(/filename\*=utf-8''(.+)/)
+      if (fileNameMatch) {
+        fileName = decodeURIComponent(fileNameMatch[1])
+      }
+    }
+    link.setAttribute('download', fileName)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  } catch (error) {
+    console.error('导出失败:', error)
+    ElMessage.error('导出失败')
+  }
 }
 
 onMounted(() => { loadData() })
