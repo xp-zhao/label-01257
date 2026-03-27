@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import axios from 'axios'
 
 // 商品管理
 export function getProductList(params) {
@@ -19,6 +20,18 @@ export function updateProduct(id, data) {
 
 export function deleteProduct(id) {
   return request.delete(`/products/${id}`)
+}
+
+export function exportProducts(params) {
+  const token = localStorage.getItem('token')
+  return axios.get('/api/products/export', {
+    baseURL: '',
+    params,
+    responseType: 'blob',
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : ''
+    }
+  })
 }
 
 // 库存管理
