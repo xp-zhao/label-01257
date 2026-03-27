@@ -9,6 +9,10 @@ export function getAllProducts() {
   return request.get('/products/all')
 }
 
+export function exportProducts(params) {
+  return request.get('/products/export', { params, responseType: 'blob' })
+}
+
 export function addProduct(data) {
   return request.post('/products', data)
 }

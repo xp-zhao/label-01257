@@ -29,6 +29,13 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   response => {
+    // 如果是blob类型的响应，直接返回
+    if (response.config.responseType === 'blob' || 
+        response.headers['content-type']?.includes('application/vnd.openxmlformats') ||
+        response.headers['content-type']?.includes('application/vnd.ms-excel')) {
+      return response
+    }
+    
     const res = response.data
     
     // 如果返回的状态码不是200，说明接口有问题

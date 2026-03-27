@@ -22,7 +22,10 @@
       <template #header>
         <div class="card-header">
           <span class="title">商品列表</span>
-          <el-button type="primary" @click="handleAdd"><el-icon><Plus /></el-icon> 新增商品</el-button>
+          <div style="display: flex; gap: 8px;">
+            <el-button type="primary" @click="handleAdd"><el-icon><Plus /></el-icon> 新增商品</el-button>
+            <el-button type="success" @click="handleExport"><el-icon><Download /></el-icon> 导出当前页</el-button>
+          </div>
         </div>
       </template>
       <el-table :data="tableData" v-loading="loading" stripe style="width: 100%">
@@ -129,7 +132,8 @@
 <script setup>
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProductList, addProduct, updateProduct, deleteProduct } from '@/api/stock'
+import { Download } from '@element-plus/icons-vue'
+import { getProductList, addProduct, updateProduct, deleteProduct, exportProducts } from '@/api/stock'
 import { withLoading } from '@/utils/loading'
 
 const loading = ref(false)
@@ -187,6 +191,23 @@ const handleSubmit = async () => {
     dialogVisible.value = false; loadData()
   } catch (error) { console.error(error) }
   finally { submitLoading.value = false }
+}
+
+const handleExport = async () => {
+  try {
+    const res = await exportProducts(queryParams)
+    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `商品列表_${new Date().toISOString().slice(0, 10)}.xlsx`
+    link.click()
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  } catch (error) {
+    console.error(error)
+    ElMessage.error('导出失败')
+  }
 }
 
 onMounted(() => { loadData() })
